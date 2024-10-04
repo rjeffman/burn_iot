@@ -1,0 +1,16 @@
+[connection]
+id=eth01
+type=802-3-ethernet
+permissions=
+autoconnect=true
+
+[ipv4]
+dns-search=
+method=auto
+
+[ipv6]
+addr-gen-mode=stable-privacy
+dns-search=
+method=auto
+
+[proxy]
