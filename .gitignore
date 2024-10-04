@@ -1,0 +1,5 @@
+# Ignore image files
+*.raw.xz
+
+# Ignore temporary files
+*.swp
