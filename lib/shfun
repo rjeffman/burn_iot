@@ -1,0 +1,49 @@
+#!/bin/sh
+
+quiet() {
+    $* >/dev/null 2>&1
+}
+
+log() {
+    level="$(tr [:lower:] [:upper:] <<<"$1")"
+    shift
+    echo "${level}: $@"
+}
+
+log_error() {
+    log ERROR "$*"
+}
+
+log_info() {
+    log INFO "$*"
+}
+
+log_debug() {
+    log DEBUG "$*"
+}
+
+die() {
+    if [ "$1" == "-u" ]
+    then
+        shift
+        check_command usage && usage
+    fi
+    log_error "$*" >&2
+    exit 2
+}
+
+check_command() {
+    [ -z "$@" ] || quiet command -v "${1}"
+}
+
+ensure_command_is_available() {
+    check_command || die "Cannot find: '${1}'"
+}
+
+check_deps() {
+    for dep in "${@}"
+    do
+        ensure_command_is_available "${dep}"
+    done
+}
+

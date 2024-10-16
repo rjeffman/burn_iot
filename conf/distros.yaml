@@ -1,0 +1,31 @@
+---
+config:
+  target:
+    rpi1:
+      gpumem: 16
+      arm_freq: 800
+      core_freq: 250
+      sdram_freq: 400
+      over_voltage: 0
+distro:
+  fedora:
+    url: "https://download.fedoraproject.org/pub/alt/iot/${verison}/IoT/${arch}/images/Fedora-IoT-raw-${version}-${date}.${release}.${arch}.raw.xz"
+    target:
+      rpi4:
+        arch: "aarch64"
+        version: "40"
+        date: "20240422"
+        release: "3"
+  raspios:
+    url: "https://downloads.raspberrypi.com/raspios_${release}${arch}/images/raspios_${release}${arch}-${date}/${date}-raspios-${version}-${arch}${IMGRELEASE}.img.xz"
+    target:
+      rpi1:
+        arch: "armhf"
+        version: "bookworm"
+        date: "2024-07-04"
+        release: "lite"
+      rpi4:
+        arch: "aarch64"
+        version: "bookworm"
+        date: "2024-07-04"
+        release: "lite"
