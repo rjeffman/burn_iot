@@ -10,7 +10,7 @@ export TEMPLATEDIR
 prog=$(basename "$0")
 
 usage() {
-    echo "usage: ${prog} [-d] DISTRO TARGET SD_DEVICE [CONFIG]"
+    echo "usage: ${prog} [-d] [-h HOSTNAME]  DISTRO TARGET SD_DEVICE [CONFIG]"
 }
 
 get_conf()
@@ -38,18 +38,25 @@ unmount_partition() {
 # Process CLI options
 #
 display=""
-if [ "${1}" == "-v" ]
-then
-    display="video=DSI-1:800x480@60,rotate=180"
-fi
-[ $# -lt 3 ] && die -u "Missing mandatory options."
+hostname=""
+domain=""
 
-#
-# Check script dependencies
-#
-log_info "Checking dependencies"
-check_deps envsubst tr mount openssl shyaml
-check_deps "${distro_deps[@]:-""}"
+while getopts ":dn:" opt "${@}"
+do
+    case "${opt}" in
+        d) display="video=DSI-1:800x480@60,rotate=180" ;;
+        n)
+            hostname="$(cut -d. -f1 <<<"${OPTARG}")"
+            domain="$(cut -d. -f2- <<<"${OPTARG}")"
+        ;;
+        *) die -u "Invalid option: ${OPTARG}"
+    esac
+done
+
+shift $((OPTIND - 1))
+
+# validate input
+[ $# -lt 3 ] && die -u "Missing mandatory options."
 
 #
 # Positional arguments
@@ -60,14 +67,25 @@ SD_DEVICE="$(readlink -f "${3}")"
 shift 3
 [ -n "${1}" ] && CONFIG="$(realpath "${1}")" && shift
 
+test -f "${LIBDIR}/${distro}.sh" || die "Invalid distro: ${distro}"
+test -b "${SD_DEVICE}" || die "Invalid block device: ${SD_DEVICE}"
+
 log_debug "Distro: ${distro}"
 log_debug "Target: ${target}"
 log_debug "Media device: ${SD_DEVICE}"
 
 export distro target SD_DEVICE
 
+#
+# Check script dependencies
+#
+log_info "Checking dependencies"
+check_deps envsubst tr mount openssl shyaml
+check_deps "${distro_deps[@]:-""}"
+
 # load distro specific scripts
-. "${SCRIPTDIR}/lib/${distro}.sh" || die "Invalid distro library '${distro}'"
+log_info "Loading ${distro} scripts"
+. "${LIBDIR}/${distro}.sh"
 
 #
 # Global configuration
@@ -116,7 +134,6 @@ export IMGRELEASE
 #
 # Defaults
 #
-hostname="raspberry"
 USERNAME="pi"
 USERPASS="raspberry"
 
@@ -126,9 +143,9 @@ USERPASS="raspberry"
 if [ -f "${CONFIG}" ]
 then
     ssh_key="$(get_conf "ssh-key" < "${CONFIG}")"
-    hostname="$(get_conf "hostname" "${hostname}" < "${CONFIG}")"
-    domain="$(get_conf "domain" < "${CONFIG}")"
-    # is_null "${domain}" || hostname="${hostname}.${domain}"
+    is_null "${hostname}" && hostname="$(get_conf "hostname" "raspberry" < "${CONFIG}")"
+    is_null "${domain}" && domain="$(get_conf "domain" < "${CONFIG}")"
+    is_null "${domain}" || hostname="${hostname}.${domain}"
     # Locale configuration
     keymap="$(get_conf "keymap" < "${CONFIG}")"
     timezone="$(get_conf "timezone" "Etc/UTC" < "${CONFIG}")"
