@@ -58,7 +58,7 @@ Choose your SD cards wisely, some are really slow to write to (as in ~5MB/s rate
 
 ## Dependencies
 
-You'll need [shyaml]() and [arm-image-installer]() to use the script.
+You'll need [shyaml](https://github.com/0k/shyaml) and [arm-image-installer](https://pagure.io/arm-image-installer) to use the script.
 
 
 ## First boot configuration
