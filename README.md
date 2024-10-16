@@ -1,34 +1,33 @@
-# Create a Raspberry Pi image using Fedora IoT
+# Headles deployment of Raspberry Pi devices
 
-The `burn_iot_image.sh` script eases the creation of SD card images using [Fedora IoT](https://fedoraproject.org/iot) for devices like the Raspberry Pi.
+The `deploy_raspbery.sh` script eases the creation of SD card images using [Fedora IoT](https://fedoraproject.org/iot) and [Raspberry Pi OS](https://www.raspberrypi.com/software/) for devices like the Raspberry Pi.
 
 The script will download the Fedora IoT image, write it to an SD card, and configure the hostname, the keymap, and the Ethernet and WiFi interfaces. The root password will be disabled and a SSH key will be added to provide SSH access to the device.
 
 The configuration is done through a YAML file:
 
 ```yaml
+hostname: "myhost"
+domain: "mydomain.local"
+timezone: "Etc/UTC"
 ssh-key: "mysshkey.pub"
-distro:
-  arch: "aarch64"
-  target: "rpi4"
-  version: "40"
-  date: "20240422"
-  release: "3"
-host:
-  keymap: "us-intl"
-  hostname: "myhost.example.net"
-  network:
-    wifi:
-      ssid: "MyNetwork"
-      password: "MyVerySecretPassword"
+user:
+  username: "defaultuser"
+  password: "clearpassword"
+network:
+  wifi:
+    ssid: "MyNetwork"
+    password: "MyVerySecretPassword"
+    hidden: false
 ```
 
 Some notes about the configuration:
 
 * Tilde expansion (`~`) does'nt work, use `/home/<myuser>` to refer to the user $HOME directory
-* By default the keymap used is _us_
+* By default the keymap used is _us_. This configuration only works for Fedora.
+* The user configures an initial user with _sudoer_ powers. It only works on Ubuntu.
+    * On Fedora, root user is enabled through `ssh_key` authentication, and no other user is created.
 * If the `wifi` network is not defined, it will not be configured
-* The ethernet interface is always configured for automatic discovery
 
 To genetare the SSH key, you can use:
 
@@ -39,11 +38,16 @@ ssh-keygen -te ed25519 -a 100 -f mysshkey -N "MyPassphase"
 To write the SD Card use:
 
 ```
-sudo ./burn_iot_image.sh myhost.yaml /dev/sda
+sudo ./deploy_raspberry.sh <distro> <target> <device>
 ```
 
-Superuser privileges are usually needed to write directly to the card.
+Currently available distros are `fedora` and `raspios`.
 
+Targets tested are `rpi1` (Model 1 B+) and `rpi 4` (tested with 4Gb and 8Gb models).
+
+Superuser privileges are usually needed to write to the device.
+
+Optionally, the hostname and domain can be set though argumenst. Use `-n <hostname>[.<domain>]` (domain is optional). If using a Raspberry Pi Dispaly on the DSI connector, add the option `-d` to generate the proper configuration.
 
 ## Speeding things up
 
@@ -56,6 +60,10 @@ Choose your SD cards wisely, some are really slow to write to (as in ~5MB/s rate
 
 You'll need [shyaml]() and [arm-image-installer]() to use the script.
 
+
+## First boot configuration
+
+Upon first boot a lot of stuff will happen on your Raspberry Pi and you should give it some minutes (as much as 20 minutes depending on board, card, configuration and network) to finish the configuration.
 
 ## License
 
