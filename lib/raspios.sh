@@ -61,5 +61,13 @@ EOF
         append_template "${TEMPLATEDIR}/${target}.txt" "${config_path}" \
         || die "Could not modify 'config.txt'."
     fi
+    # Add display entry to cmdline
+    if ! is_null "${display}"
+    then
+        log_debug "Modifying: "${bootpart}/cmdline.txt""
+        cmdline="${display} $(cat "${bootpart}/cmdline.txt")"
+        log_debug "Setting cmdline.txt to: ${cmdline}"
+        sed "s/^ *//" <<<"${cmdline}" > "${bootpart}/cmdline.txt"
+    fi
 }
 

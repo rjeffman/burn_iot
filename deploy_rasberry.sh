@@ -44,10 +44,10 @@ domain=""
 while getopts ":dn:" opt "${@}"
 do
     case "${opt}" in
-        d) display="video=DSI-1:800x480@60,rotate=180" ;;
+        d) display="fbcon=rotate:2" ;;
         n)
             hostname="$(cut -d. -f1 <<<"${OPTARG}")"
-            domain="$(cut -d. -f2- <<<"${OPTARG}")"
+            [ "${hostname}" != "${OPTARG}" ] && domain="$(cut -d. -f2- <<<"${OPTARG}")"
         ;;
         *) die -u "Invalid option: ${OPTARG}"
     esac
