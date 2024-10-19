@@ -9,7 +9,7 @@ config:
       over_voltage: 0
 distro:
   fedora:
-    url: "https://download.fedoraproject.org/pub/alt/iot/${verison}/IoT/${arch}/images/Fedora-IoT-raw-${version}-${date}.${release}.${arch}.raw.xz"
+    url: "https://download.fedoraproject.org/pub/alt/iot/${version}/IoT/${arch}/images/Fedora-IoT-raw-${version}-${date}.${release}.${arch}.raw.xz"
     target:
       rpi4:
         arch: "aarch64"
@@ -29,3 +29,14 @@ distro:
         version: "bookworm"
         date: "2024-07-04"
         release: "lite"
+  netbsd:
+    url: "http://nycdn.netbsd.org/pub/NetBSD-daily/${version}/latest/evbarm-${arch}/binary/gzimg/${release}.img.gz"
+    target:
+      rpi1:
+        arch: "earmv6hf"
+        version: "netbsd-9"
+        release: "rpi"
+      rpi4:
+        arch: "aarch64"
+        version: "netbsd-10"
+        release: "arm64"

@@ -35,9 +35,61 @@ unmount_partition() {
 }
 
 append_template() {
+    log_debug "append template: [${1}] [${2}]"
     envsubst < "${1}" >> "${2}"
 }
 
+pre_boot_customization() {
+    log_info "Customizing OS pre-boot"
+
+    # Partition mount points
+    bootpart="$(readlink -f $(mktemp -d))"
+    ospart="$(readlink -f $(mktemp -d))"
+
+    log_info "Mounting boot partition: ${bootpart}"
+    mount "${SD_DEVICE}${BOOT_PARTITION}" "${bootpart}" || die "Could not mount boot partition"
+
+    log_info "Mounting OS partition: ${ospart}"
+    mount "${SD_DEVICE}${OS_PARTITION}" "${ospart}" || die "Could not mount OS partition"
+
+    # Configure image
+    custom_config "${bootpart}" "${ospart}"
+
+    #
+    # Configure config.txt
+    #
+    config_path="${bootpart}/config.txt"
+    log_debug "Path to config.txt: ${config_path}"
+    # Update config.txt with changes for all versions
+    if [ -f "${TEMPLATEDIR}/all.txt" ]
+    then
+        log_debug "Adding configuration for [all] in config.txt"
+        append_template "${TEMPLATEDIR}/${target}.txt" "${config_path}" \
+            || die "Could not modify 'config.txt'."
+    fi
+
+    # Update config.txt with target changes
+    if [ -f "${TEMPLATEDIR}/${target}.txt" ]
+    then
+        log_debug "Adding configuration for [${target}] in config.txt"
+        append_template "${TEMPLATEDIR}/${target}.txt" "${config_path}" \
+            || die "Could not modify 'config.txt'."
+    fi
+    # Add display entry to cmdline
+    if ! is_null "${display}"
+    then
+        log_debug "Modifying cmdline.txt to properly rotate DSI monitor"
+        cmdline="${display} $(cat "${bootpart}/cmdline.txt")"
+        log_debug "Setting cmdline.txt to: ${cmdline}"
+        sed "s/^ *//" <<<"${cmdline}" > "${bootpart}/cmdline.txt"
+    fi
+
+    # Clean up
+    unmount_partition "${bootpart}"
+    unmount_partition "${ospart}"
+
+    rm -rf "${bootpart}" "${ospart}"
+}
 
 #
 # Process CLI options
@@ -202,52 +254,11 @@ log_info "Writing image"
 write_image "${IMAGEFILE}" "${SD_DEVICE}" "${ssh_key}" "${target}" \
     || die "Failed to write image ${1}"
 
-# Partition mount points
-bootpart="$(readlink -f $(mktemp -d))"
-ospart="$(readlink -f $(mktemp -d))"
-
-log_info "Mounting boot partition: ${bootpart}"
-mount "${SD_DEVICE}${BOOT_PARTITION}" "${bootpart}" || die "Could not mount boot partition"
-
-log_info "Mounting OS partition: ${ospart}"
-mount "${SD_DEVICE}${OS_PARTITION}" "${ospart}" || die "Could not mount OS partition"
-
-# Configure image
-custom_config "${bootpart}" "${ospart}"
-
-#
-# Configure config.txt
-#
-config_path="${bootpart}/config.txt"
-log_debug "Path to config.txt: ${config_path}"
-# Update config.txt with changes for all versions
-if [ -f "${TEMPLATEDIR}/all.txt" ]
+if is_customizable
 then
-    log_debug "Adding configuration for [all] in config.txt"
-    append_template "${TEMPLATEDIR}/${target}.txt" "${config_path}" \
-        || die "Could not modify 'config.txt'."
+    pre_boot_customization
+else
+    log_info "${distro} is not customizable."
 fi
-
-# Update config.txt with target changes
-if [ -f "${TEMPLATEDIR}/${target}.txt" ]
-then
-    log_debug "Adding configuration for [${target}] in config.txt"
-    append_template "${TEMPLATEDIR}/${target}.txt" "${config_path}" \
-        || die "Could not modify 'config.txt'."
-fi
-# Add display entry to cmdline
-if ! is_null "${display}"
-then
-    log_debug "Modifying cmdline.txt to properly rotate DSI monitor"
-    cmdline="${display} $(cat "${bootpart}/cmdline.txt")"
-    log_debug "Setting cmdline.txt to: ${cmdline}"
-    sed "s/^ *//" <<<"${cmdline}" > "${bootpart}/cmdline.txt"
-fi
-
-# Clean up
-unmount_partition "${bootpart}"
-unmount_partition "${ospart}"
-
-rm -rf "${bootpart}" "${ospart}"
 
 log_info "Image configured and saved to ${SD_DEVICE}."

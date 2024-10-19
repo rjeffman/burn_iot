@@ -10,6 +10,10 @@ write_image() {
     xzcat "${1}" | dd of="${2}" status=progress bs=1M
 }
 
+is_customizable() {
+    true
+}
+
 custom_config() {
     bootpart="${1}"
     ospart="${2}"

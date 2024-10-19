@@ -28,6 +28,10 @@ copy_template() {
     chmod 0644 "${dest}"
 }
 
+is_customizable() {
+    true
+}
+
 custom_config() {
     bootpart="${1}"
     ospart="${2}"
