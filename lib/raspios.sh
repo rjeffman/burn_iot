@@ -10,16 +10,11 @@ write_image() {
     xzcat "${1}" | dd of="${2}" status=progress bs=1M
 }
 
-append_template() {
-    envsubst < "${1}" >> "${2}"
-}
-
 custom_config() {
     bootpart="${1}"
     ospart="${2}"
     shift 2
     toml_path="${bootpart}/custom.toml"
-    config_path="${bootpart}/config.txt"
 
     cat > "${toml_path}" <<EOF
 config_version = 1
@@ -53,21 +48,6 @@ EOF
     then
         log_debug "Creating: ${bootpart}/userconf.txt"
         echo "${USERNAME}:$(openssl passwd -6 -stdin <<<"${USERPASS}")" > "${bootpart}/userconf.txt"
-    fi
-    # Update config.txt with target changes
-    if [ -f "${TEMPLATEDIR}/${target}.txt" ]
-    then
-        log_debug "Modifying: ${config_path}"
-        append_template "${TEMPLATEDIR}/${target}.txt" "${config_path}" \
-        || die "Could not modify 'config.txt'."
-    fi
-    # Add display entry to cmdline
-    if ! is_null "${display}"
-    then
-        log_debug "Modifying: "${bootpart}/cmdline.txt""
-        cmdline="${display} $(cat "${bootpart}/cmdline.txt")"
-        log_debug "Setting cmdline.txt to: ${cmdline}"
-        sed "s/^ *//" <<<"${cmdline}" > "${bootpart}/cmdline.txt"
     fi
 }
 

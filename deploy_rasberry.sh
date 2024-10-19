@@ -34,6 +34,11 @@ unmount_partition() {
     umount "${1}"
 }
 
+append_template() {
+    envsubst < "${1}" >> "${2}"
+}
+
+
 #
 # Process CLI options
 #
@@ -209,6 +214,35 @@ mount "${SD_DEVICE}${OS_PARTITION}" "${ospart}" || die "Could not mount OS parti
 
 # Configure image
 custom_config "${bootpart}" "${ospart}"
+
+#
+# Configure config.txt
+#
+config_path="${bootpart}/config.txt"
+log_debug "Path to config.txt: ${config_path}"
+# Update config.txt with changes for all versions
+if [ -f "${TEMPLATEDIR}/all.txt" ]
+then
+    log_debug "Adding configuration for [all] in config.txt"
+    append_template "${TEMPLATEDIR}/${target}.txt" "${config_path}" \
+        || die "Could not modify 'config.txt'."
+fi
+
+# Update config.txt with target changes
+if [ -f "${TEMPLATEDIR}/${target}.txt" ]
+then
+    log_debug "Adding configuration for [${target}] in config.txt"
+    append_template "${TEMPLATEDIR}/${target}.txt" "${config_path}" \
+        || die "Could not modify 'config.txt'."
+fi
+# Add display entry to cmdline
+if ! is_null "${display}"
+then
+    log_debug "Modifying cmdline.txt to properly rotate DSI monitor"
+    cmdline="${display} $(cat "${bootpart}/cmdline.txt")"
+    log_debug "Setting cmdline.txt to: ${cmdline}"
+    sed "s/^ *//" <<<"${cmdline}" > "${bootpart}/cmdline.txt"
+fi
 
 # Clean up
 unmount_partition "${bootpart}"
