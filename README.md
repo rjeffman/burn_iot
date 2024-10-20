@@ -10,7 +10,7 @@ The configuration is done through a YAML file:
 hostname: "myhost"
 domain: "mydomain.local"
 timezone: "Etc/UTC"
-ssh-key: "mysshkey.pub"
+ssh-key: "ssh_keys/mysshkey.pub"
 user:
   username: "defaultuser"
   password: "clearpassword"
@@ -32,7 +32,7 @@ Some notes about the configuration:
 To genetare the SSH key, you can use:
 
 ```bash
-ssh-keygen -te ed25519 -a 100 -f mysshkey -N "MyPassphrase"
+ssh-keygen -te ed25519 -a 100 -f ssh_keys/mysshkey -N "MyPassphrase"
 ```
 
 To write the SD Card use:

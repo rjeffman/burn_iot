@@ -1,5 +1,7 @@
 # Ignore image files
 /images/
+# Ignore ssh_keys
+/ssh_keys/
 
 # Ignore temporary files
 *.swp
