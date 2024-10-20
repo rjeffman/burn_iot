@@ -32,38 +32,63 @@ Some notes about the configuration:
 To genetare the SSH key, you can use:
 
 ```bash
-ssh-keygen -te ed25519 -a 100 -f mysshkey -N "MyPassphase"
+ssh-keygen -te ed25519 -a 100 -f mysshkey -N "MyPassphrase"
 ```
 
 To write the SD Card use:
 
 ```
-sudo ./deploy_raspberry.sh <distro> <target> <device>
+sudo ./deploy_raspberry.sh <system> <target> <device>
 ```
 
-Currently available distros are `fedora` and `raspios`.
+Currently available systems and targets:
+* Fedora IoT (_fedora_)
+    * rpi4
+* Raspberry Pi OS (_raspios_):
+    * rpi1
+    * rpi4a (untested)
+* NetBSD (_netbsd_):
+    * rpi1 (NetBSD 9.x)
+    * rpi4 (NetBSD 10.x - untested)
+    * `Note`: only partial support is provided for `netbsd`. To finish the installation you'll still need a monitor and a keyboard attached to the Raspberry Pi device to setup the `root` password and, at least, install a Python version (e.g. `# pkg_add python3.11`) if you plan to use [Ansible](https://ansible.com) to automate the configuration.
 
-Targets tested are `rpi1` (Model 1 B+) and `rpi 4` (tested with 4Gb and 8Gb models).
 
-Superuser privileges are usually needed to write to the device.
+Superuser privileges are usually needed to write to the SD card device.
 
-Optionally, the hostname and domain can be set though argumenst. Use `-n <hostname>[.<domain>]` (domain is optional). If using a Raspberry Pi Dispaly on the DSI connector, add the option `-d` to generate the proper configuration.
+Optionally, the hostname and domain can be set though argumenst. Use `-n <hostname>[.<domain>]` (domain is optional). If using a Raspberry Pi Display on the DSI connector, add the option `-r` to set the framebuffer rotation.
 
 ## Speeding things up
 
-Downloading the image and writing to the card is what really consumes time here, if you have more than a single card to prepare, the image downloaded is kept in the working directory, and is used as cache, speeding things up. As the changes are applied directly to the SD card, the original image is kept as downloaded.
+Downloading the image and writing to the card is what really consumes time here, if you have more than a single card to prepare, the image downloaded is kept in a chache directory speeding things up. As the changes are applied directly to the SD card, the original image is kept as downloaded.
 
 Choose your SD cards wisely, some are really slow to write to (as in ~5MB/s rate or less), and may take up to 15 minutes to prepare.
 
 
 ## Dependencies
 
-You'll need [shyaml](https://github.com/0k/shyaml) and [arm-image-installer](https://pagure.io/arm-image-installer) to use the script.
+You'll need [shyaml](https://github.com/0k/shyaml), `envsubst` (which usually is part of `gettext-envsubst` package) and `dd`(which is usually avaiable, as is part of `coreutils`). Als for each system to be deployed you'll need:
+* fedora: [arm-image-installer](https://pagure.io/arm-image-installer)
+* raspios: [xzcat](https://github.com/tukaani-project/xz)
+* netbsd: [zcat](https://www.gnu.org/software/gzip)
+
+
+## Raspberry `config.txt`
+
+You may add any configuration to your target board. It will be placed in `config.txt` on the boot partition, and in a `[<target>]` section.
+
+Just add the variables you want on the configuration file like:
+
+```yaml
+target:
+  rpi1:
+    gpu_mem: 16
+    arm_freq: 800
+```
 
 
 ## First boot configuration
 
-Upon first boot a lot of stuff will happen on your Raspberry Pi and you should give it some minutes (as much as 20 minutes depending on board, card, configuration and network) to finish the configuration.
+Upon first boot a lot of stuff will happen on your Raspberry Pi and you should give it some minutes (as much as 20 minutes depending on board, card, system, configuration and network) to finish the configuration.
 
 ## License
 

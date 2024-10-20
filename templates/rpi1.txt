@@ -1,8 +1,8 @@
 
 # Added by IoT configuration
 [p1]
-arm_freq=${config[arm_freq]:-700}
-core_freq=${config[core_freq]:-250}
-sdram_freq=${config[sdram_freq]:-400}
-over_voltage=${config[over_voltage]:-0}
-gpu_mem=${config[gpu_mem]:-128}
+arm_freq=${arm_freq}
+core_freq=${core_freq}
+sdram_freq=${sdram_freq}
+over_voltage=${over_voltage}
+gpu_mem=${gpu_mem}

@@ -91,6 +91,19 @@ pre_boot_customization() {
     rm -rf "${bootpart}" "${ospart}"
 }
 
+update_config() {
+    newconfig="$(cat -)"
+    shift 1
+    if ! is_null "${newconfig}"
+    then
+        for key in $(shyaml keys <<<"${newconfig}")
+        do
+            value="$(shyaml get-value "${key}" <<<"${newconfig}")"
+            export ${key}="${value}"
+        done
+    fi
+}
+
 #
 # Process CLI options
 #
@@ -147,19 +160,11 @@ log_info "Loading ${distro} scripts"
 #
 # Global configuration
 #
+[ -f "${CONFDIR}/${target}.yaml" ] && update_config < "${CONFDIR}/${target}.yaml"
 log_info "Parsing global configuration"
-configdata="$(get_conf "config.target" < "${CONFDIR}/distros.yaml")"
-declare -A "config=()"
-if ! is_null "${configdata}"
-then
-    targetconfig=( $(shyaml key-values "target.${target}" <<< "${configdata}" 2>/dev/null) )
-    if ! is_null "${targetconfigu}"
-    then
-        declare -A "config=( $(echo ${targetconfig[@]} \
-            | sed 's/[ ]*\([^ ]*\)[ ]*\([^ ]*\)/[\1]=\2 /g') )"
-    fi
-    export config
-fi
+configdata="$(get_conf "config" < "${CONFDIR}/distros.yaml")"
+is_null "${configdata}" \
+  || update_config <<<"$(get_conf "target.${target}" <<< "${configdata}" 2>/dev/null)"
 
 #
 # Distro release
@@ -222,7 +227,8 @@ then
         USERPASS="$(get_conf "password" <<<"${userconf}")"
         export USERNAME USERPASS
     fi
-
+    # Override target configuration
+    update_config <<<$(get_conf "target.${target}" <"${CONFIG}" 2>/dev/null)
 fi
 
 log_info "Configuration:"

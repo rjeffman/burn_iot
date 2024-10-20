@@ -2,11 +2,7 @@
 config:
   target:
     rpi1:
-      gpumem: 16
       arm_freq: 800
-      core_freq: 250
-      sdram_freq: 400
-      over_voltage: 0
 distro:
   fedora:
     url: "https://download.fedoraproject.org/pub/alt/iot/${version}/IoT/${arch}/images/Fedora-IoT-raw-${version}-${date}.${release}.${arch}.raw.xz"
