@@ -39,8 +39,8 @@ password_encrypted = false
 hidden=${wifi_hidden:-"false"}
 country = ""
 [locale]
-# keymap="${keymap}"
-keymap="us"
+# keymap is not working as needed
+# keymap="us"
 timezone = "${timezone}"
 EOF
 
@@ -52,6 +52,15 @@ EOF
     then
         log_debug "Creating: ${bootpart}/userconf.txt"
         echo "${USERNAME}:$(openssl passwd -6 -stdin <<<"${USERPASS}")" > "${bootpart}/userconf.txt"
+    fi
+
+    # configure keyboard
+    if [ -n "${keymap}" ]
+    then
+        kbdlayout="$(cut -d- -f1 <<<"${keymap}")"
+        kbdvariant="$(cut -d- -f2- <<<"${keymap}")"
+        export kbdlayout kbdvariant
+        copy_template "${TEMPLATEDIR}/keyboard" "${ospart}/etc/default/keyboard"
     fi
 }
 

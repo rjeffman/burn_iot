@@ -40,13 +40,6 @@ custom_config() {
     # Enable SSH
     log_info "Enable SSH"
     touch "${bootpart}/ssh"
-    # Add user before first boot
-    if [ -n "${USERNAME}" ]
-    then
-        log_info "Creating user '${USERNAME}'"
-        encoded_password="$(openssl passwd -6 -stdin <<<"${USERPASS}")"
-        echo "${USERNAME}:${encoded_password}" > "${bootpart}/userconf.txt"
-    fi
     # Set hostname
     log_info "Configuring hostname to '$hostname'"
     echo "${hostname}" > "${deployroot}/etc/hostname"

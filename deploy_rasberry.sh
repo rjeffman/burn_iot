@@ -34,6 +34,11 @@ unmount_partition() {
     umount "${1}"
 }
 
+copy_template() {
+    log_debug "copy template: [${1}] [${2}]"
+    envsubst < "${1}" > "${2}"
+}
+
 append_template() {
     log_debug "append template: [${1}] [${2}]"
     envsubst < "${1}" >> "${2}"
@@ -64,7 +69,7 @@ pre_boot_customization() {
     if [ -f "${TEMPLATEDIR}/all.txt" ]
     then
         log_debug "Adding configuration for [all] in config.txt"
-        append_template "${TEMPLATEDIR}/${target}.txt" "${config_path}" \
+        append_template "${TEMPLATEDIR}/all.txt" "${config_path}" \
             || die "Could not modify 'config.txt'."
     fi
 
