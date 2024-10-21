@@ -10,7 +10,7 @@ export TEMPLATEDIR
 prog=$(basename "$0")
 
 usage() {
-    echo "usage: ${prog} [-d] [-h HOSTNAME]  DISTRO TARGET SD_DEVICE [CONFIG]"
+    echo "usage: ${prog} [-r ROTATE] [-h HOSTNAME]  DISTRO TARGET SD_DEVICE [CONFIG]"
 }
 
 get_conf()
@@ -76,10 +76,10 @@ pre_boot_customization() {
             || die "Could not modify 'config.txt'."
     fi
     # Add display entry to cmdline
-    if ! is_null "${display}"
+    if ! is_null "${rotate}"
     then
         log_debug "Modifying cmdline.txt to properly rotate DSI monitor"
-        cmdline="${display} $(cat "${bootpart}/cmdline.txt")"
+        cmdline="${rotate} $(cat "${bootpart}/cmdline.txt")"
         log_debug "Setting cmdline.txt to: ${cmdline}"
         sed "s/^ *//" <<<"${cmdline}" > "${bootpart}/cmdline.txt"
     fi
@@ -107,14 +107,14 @@ update_config() {
 #
 # Process CLI options
 #
-display=""
+rotate=""
 hostname=""
 domain=""
 
-while getopts ":dn:" opt "${@}"
+while getopts ":n:r:" opt "${@}"
 do
     case "${opt}" in
-        d) display="fbcon=rotate:2" ;;
+        r) rotate="fbcon=rotate:${OPTARG}" ;;
         n)
             hostname="$(cut -d. -f1 <<<"${OPTARG}")"
             [ "${hostname}" != "${OPTARG}" ] && domain="$(cut -d. -f2- <<<"${OPTARG}")"
@@ -250,6 +250,7 @@ is_null "${timezone}" || log_debug "Username: ${timezone}"
 url="$(envsubst <<<"${url}")"
 log_debug "Download link: ${url}"
 log_info "Downloading image: ${distro} version ${version} for ${target}"
+
 quiet mkdir -p "${SCRIPTDIR}/images"
 IMAGEFILE="${SCRIPTDIR}/images/$(basename "${url}")"
 curl -C - -L -o "${IMAGEFILE}" "${url}" \
