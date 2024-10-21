@@ -4,6 +4,8 @@ The `deploy_raspbery.sh` script eases the creation of SD card images using [Fedo
 
 The script will download the Fedora IoT image, write it to an SD card, and configure the hostname, the keymap, and the Ethernet and WiFi interfaces. The root password will be disabled and a SSH key will be added to provide SSH access to the device.
 
+## Customizing configuration
+
 The configuration is done through a YAML file:
 
 ```yaml
@@ -11,6 +13,7 @@ hostname: "myhost"
 domain: "mydomain.local"
 timezone: "Etc/UTC"
 ssh-key: "ssh_keys/mysshkey.pub"
+keymap: "us-dvorak-alt-intl"
 user:
   username: "defaultuser"
   password: "clearpassword"
@@ -19,21 +22,58 @@ network:
     ssid: "MyNetwork"
     password: "MyVerySecretPassword"
     hidden: false
+target:
+  rpi1:
+    gpu_mem: 16
 ```
 
-Some notes about the configuration:
+All configuration is optional. Currently, NetBSD cannot be customized.
 
-* Tilde expansion (`~`) does'nt work, use `/home/<myuser>` to refer to the user $HOME directory
-* By default the keymap used is _us_. This configuration only works for Fedora.
-* The user configures an initial user with _sudoer_ powers. It only works on Ubuntu.
-    * On Fedora, root user is enabled through `ssh_key` authentication, and no other user is created.
-* If the `wifi` network is not defined, it will not be configured
 
-To genetare the SSH key, you can use:
+### Keymap configuration
+
+Keymap configuration only works for Fedora. By default the keymap used is "us".
+
+
+### Access configuration
+
+There are two ways to configure access to the device, by adding a user with `sudo` powers, or by allowing `root` login through a SSH key.
+
+Adding a user requires a username and a password, in clear text. By default, the user is `pi` and the password is `raspberry`. This is only used for Raspberry Pi OS.
+
+Setting up a SSH key for root access only works with Fedora. If you don't set the ssh key, you'll not be able to access the device.
+
+To genetare the SSH key, you can use: 
 
 ```bash
 ssh-keygen -te ed25519 -a 100 -f ssh_keys/mysshkey -N "MyPassphrase"
 ```
+
+A passphrase is optional, see `ssh-keygen` documentation.
+
+
+## Overriding config.txt options
+
+It is possible to override any setting for the board type using the proper `target` configuration.
+
+Any variable set under a target board will be added to the `config.txt` file, in the boot partition, as:
+
+```ini
+[<target>]
+variable = value
+```
+
+For example, to reduce the GPU memory and slightly overclock a Raspberry Pi 1 device use:
+
+```yaml
+target:
+  rpi1:
+    gpu_mem: 16
+    arm_freq: 800
+```
+
+
+## Writing the image
 
 To write the SD Card use:
 
@@ -55,7 +95,14 @@ Currently available systems and targets:
 
 Superuser privileges are usually needed to write to the SD card device.
 
-Optionally, the hostname and domain can be set though argumenst. Use `-n <hostname>[.<domain>]` (domain is optional). If using a Raspberry Pi Display on the DSI connector, add the option `-r` to set the framebuffer rotation.
+Optionally, the hostname and domain can be set though argumenst. Use `-n <hostname>[.<domain>]` (domain is optional).
+
+It is also possible to set the framebuffer rotation with the `-r` option where the rotation is defined as:
+* 0 = no rotation
+* 1 = rotate right
+* 2 = rotate 180 degrees
+* 3 = rotate left
+
 
 ## Speeding things up
 
@@ -70,20 +117,6 @@ You'll need [shyaml](https://github.com/0k/shyaml), `envsubst` (which usually is
 * fedora: [arm-image-installer](https://pagure.io/arm-image-installer)
 * raspios: [xzcat](https://github.com/tukaani-project/xz)
 * netbsd: [zcat](https://www.gnu.org/software/gzip)
-
-
-## Raspberry `config.txt`
-
-You may add any configuration to your target board. It will be placed in `config.txt` on the boot partition, and in a `[<target>]` section.
-
-Just add the variables you want on the configuration file like:
-
-```yaml
-target:
-  rpi1:
-    gpu_mem: 16
-    arm_freq: 800
-```
 
 
 ## First boot configuration
