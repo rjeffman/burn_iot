@@ -176,22 +176,9 @@ is_null "${distroconf}" && die "No configuration for distro ${distro}"
 url="$(get_conf "url" <<<"${distroconf}")"
 is_null "${url}" && die "Could not parse download URL for ${distro}."
 
-releaseconf=( $(shyaml key-values "target.${target}" <<< "${distroconf}") )
+releaseconf=$(get_conf "target.${target}" <<< "${distroconf}")
 is_null "${releaseconf}" && die "${distro} has no release data for target ${target}"
-declare -A "releasedata=( $(echo ${releaseconf[@]} | sed 's/[ ]*\([^ ]*\)[ ]*\([^ ]*\)/[\1]=\2 /g') )"
-for key in "${!releasedata[@]}"
-do
-    export ${key}="${releasedata[${key}]}"
-done
-# Raspbian OS has an awful download link.
-IMGRELEASE=""
-if ! is_null "${release}" && [ "${distro}" == "raspios" ]
-then
-    IMGRELEASE="-${release}"
-    release="${release}_"
-    export release
-fi
-export IMGRELEASE
+update_config <<<"${releaseconf}"
 
 #
 # Defaults
@@ -230,6 +217,16 @@ then
     # Override target configuration
     update_config <<<$(get_conf "target.${target}" <"${CONFIG}" 2>/dev/null)
 fi
+
+# Raspbian OS has an awful download link.
+IMGRELEASE=""
+if ! is_null "${release}" && [ "${distro}" == "raspios" ]
+then
+    IMGRELEASE="-${release}"
+    release="${release}_"
+    export release
+fi
+export IMGRELEASE
 
 log_info "Configuration:"
 log_info "Release: $arch $version $date $release"
