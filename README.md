@@ -1,8 +1,8 @@
-# Headles deployment of Raspberry Pi devices
+# Headless deployment of Raspberry Pi devices
 
 The `deploy_raspbery.sh` script eases the creation of SD card images using [Fedora IoT](https://fedoraproject.org/iot) and [Raspberry Pi OS](https://www.raspberrypi.com/software/) for devices like the Raspberry Pi.
 
-The script will download the Fedora IoT image, write it to an SD card, and configure the hostname, the keymap, and the Ethernet and WiFi interfaces. The root password will be disabled and a SSH key will be added to provide SSH access to the device.
+The script will download a pre-built image, write it to an SD card, and configure the hostname, the keymap, and the Ethernet and WiFi interfaces. The root password will be disabled and a SSH key will be added to provide SSH access to the device.
 
 ## Customizing configuration
 
