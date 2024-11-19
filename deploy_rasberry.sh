@@ -10,7 +10,7 @@ export TEMPLATEDIR
 prog=$(basename "$0")
 
 usage() {
-    echo "usage: ${prog} [-r ROTATE] [-h HOSTNAME]  DISTRO TARGET SD_DEVICE [CONFIG]"
+    echo "usage: ${prog} [-r ROTATE] [-n HOSTNAME] DISTRO TARGET SD_DEVICE [CONFIG]"
 }
 
 get_conf()
