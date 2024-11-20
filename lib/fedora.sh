@@ -25,7 +25,7 @@ copy_template() {
     dest="${2}"
     mode="${3-"0644"}"
     envsubst < "${src}" > "${dest}"
-    chmod 0644 "${dest}"
+    chmod "${mode}" "${dest}"
 }
 
 is_customizable() {
