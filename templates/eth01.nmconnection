@@ -3,6 +3,7 @@ id=eth01
 type=802-3-ethernet
 permissions=
 autoconnect=true
+uuid=${uuid}
 
 [ipv4]
 dns-search=

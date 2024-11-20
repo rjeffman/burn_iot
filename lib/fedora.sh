@@ -55,10 +55,12 @@ custom_config() {
     then
         log_info "Configuring WiFi..."
         dest="${deployroot}/${system_connections}/wifi01.nmconnection"
+        export uuid="$(uuid)"
         copy_template "${TEMPLATEDIR}/wifi01.nmconnection" "${dest}" "0600"
     fi
     # Configure eth
     log_info "Configuring eth..."
     dest="${deployroot}/${system_connections}/eth01.nmconnection"
+    export uuid="$(uuid)"
     copy_template "${TEMPLATEDIR}/eth01.nmconnection" "${dest}" "0600"
 }

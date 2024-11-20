@@ -1,11 +1,10 @@
 [connection]
 id=wifi01
 type=wifi
-permissions=
 autoconnect=true
+uuid=${uuid}
 
 [wifi]
-mac-address-blacklist=
 mode=infrastructure
 ssid=${wifi_ssid}
 
@@ -15,12 +14,10 @@ key-mgmt=wpa-psk
 psk=${wifi_password}
 
 [ipv4]
-dns-search=
 method=auto
 
 [ipv6]
 addr-gen-mode=stable-privacy
-dns-search=
 method=auto
 
 [proxy]

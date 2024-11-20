@@ -114,7 +114,7 @@ Choose your SD cards wisely, some are really slow to write to (as in ~5MB/s rate
 ## Dependencies
 
 You'll need [shyaml](https://github.com/0k/shyaml), `envsubst` (which usually is part of `gettext-envsubst` package) and `dd`(which is usually avaiable, as is part of `coreutils`). Als for each system to be deployed you'll need:
-* fedora: [arm-image-installer](https://pagure.io/arm-image-installer)
+* fedora: [arm-image-installer](https://pagure.io/arm-image-installer), `uuid`
 * raspios: [xzcat](https://github.com/tukaani-project/xz)
 * netbsd: [zcat](https://www.gnu.org/software/gzip)
 
