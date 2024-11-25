@@ -10,7 +10,7 @@ export TEMPLATEDIR
 prog=$(basename "$0")
 
 usage() {
-    echo "usage: ${prog} [-r ROTATE] [-n HOSTNAME] DISTRO TARGET SD_DEVICE [CONFIG]"
+    echo "usage: ${prog} [-h] [-r ROTATE] [-n HOSTNAME] DISTRO TARGET SD_DEVICE [CONFIG]"
 }
 
 get_conf()
@@ -116,9 +116,10 @@ rotate=""
 hostname=""
 domain=""
 
-while getopts ":n:r:" opt "${@}"
+while getopts ":hn:r:" opt "${@}"
 do
     case "${opt}" in
+        h) usage && exit 0 ;;
         r) rotate="fbcon=rotate:${OPTARG}" ;;
         n)
             hostname="$(cut -d. -f1 <<<"${OPTARG}")"
