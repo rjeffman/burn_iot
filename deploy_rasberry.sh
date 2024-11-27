@@ -249,8 +249,8 @@ then
     log_debug "Password: ${wifi_password}"
     log_debug "Hidden: ${wifi_hidden:-"false"}"
 fi
-is_null "${keymap}" || log_debug "Username: ${keymap}"
-is_null "${timezone}" || log_debug "Username: ${timezone}"
+is_null "${keymap}" || log_debug "Keymap: ${keymap}"
+is_null "${timezone}" || log_debug "Timezone: ${timezone}"
 
 # download image
 url="$(envsubst <<<"${url}")"
