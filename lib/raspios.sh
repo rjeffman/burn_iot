@@ -30,8 +30,8 @@ password = "${USERPASS}"
 password_encrypted = false
 [ssh]
 enabled = true
-password_authentication = true
-autorized_keys = ["$(cat "${ssh_key}")"]
+password_authentication = false
+authorized_keys = ["$(cat "${ssh_key}")"]
 [wlan]
 ssid="${wifi_ssid}"
 password="${wifi_password}"
