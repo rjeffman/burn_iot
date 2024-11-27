@@ -10,7 +10,7 @@ export TEMPLATEDIR
 prog=$(basename "$0")
 
 usage() {
-    echo "usage: ${prog} [-h] [-r ROTATE] [-n HOSTNAME] DISTRO TARGET SD_DEVICE [CONFIG]"
+    echo "usage: ${prog} [-h] [-r ROTATE] [-n HOSTNAME] [-s SSID] DISTRO TARGET SD_DEVICE [CONFIG]"
 }
 
 get_conf()
@@ -116,15 +116,16 @@ rotate=""
 hostname=""
 domain=""
 
-while getopts ":hn:r:" opt "${@}"
+while getopts ":hn:r:s:" opt "${@}"
 do
     case "${opt}" in
         h) usage && exit 0 ;;
-        r) rotate="fbcon=rotate:${OPTARG}" ;;
         n)
             hostname="$(cut -d. -f1 <<<"${OPTARG}")"
             [ "${hostname}" != "${OPTARG}" ] && domain="$(cut -d. -f2- <<<"${OPTARG}")"
         ;;
+        r) rotate="fbcon=rotate:${OPTARG}" ;;
+        s) wifi_ssid="${OPTARG}" ;;
         *) die -u "Invalid option: ${OPTARG}"
     esac
 done
@@ -206,11 +207,11 @@ then
     timezone="$(get_conf "timezone" "Etc/UTC" < "${CONFIG}")"
     # WiFi configuration
     wificonf="$(get_conf "network.wifi" < "${CONFIG}")"
-    if [ "${wificonf}" != "null" ]
+    if ! is_null "${wificonf}"
     then
-        wifi_ssid="$(get_conf "ssid" <<<"${wificonf}")"
+        conf_wifi_ssid="$(get_conf "ssid" <<<"${wificonf}")"
+        wifi_ssid="${wifi_ssid:-${conf_wifi_ssid}}"
         wifi_password="$(get_conf "password" <<<"${wificonf}")"
-        export wifi_ssid wifi_password
     fi
     # User configuration
     userconf="$(get_conf "user" < "${CONFIG}")"
@@ -223,6 +224,8 @@ then
     # Override target configuration
     update_config <<<$(get_conf "target.${target}" <"${CONFIG}" 2>/dev/null)
 fi
+
+is_null "${wifi_ssid}" || export wifi_ssid wifi_password
 
 # Raspbian OS has an awful download link.
 IMGRELEASE=""
