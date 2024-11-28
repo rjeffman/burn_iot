@@ -22,6 +22,7 @@ network:
     ssid: "MyNetwork"
     password: "MyVerySecretPassword"
     hidden: false
+    country: "BR"
 target:
   rpi1:
     gpu_mem: 16
@@ -84,9 +85,12 @@ sudo ./deploy_raspberry.sh <system> <target> <device>
 Currently available systems and targets:
 * Fedora IoT (_fedora_)
     * rpi4
+    * rpi02w
 * Raspberry Pi OS (_raspios_):
     * rpi1
-    * rpi4a (untested)
+    * rpi4 (untested)
+    * rpi0w
+    * rpi02w
 * NetBSD (_netbsd_):
     * rpi1 (NetBSD 9.x)
     * rpi4 (NetBSD 10.x - untested)
