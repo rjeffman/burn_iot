@@ -34,13 +34,13 @@ password_authentication = false
 authorized_keys = ["$(cat "${ssh_key}")"]
 [wlan]
 ssid="${wifi_ssid}"
-password="${wifi_password}"
+password = "${wifi_password}"
 password_encrypted = false
-hidden=${wifi_hidden:-"false"}
-country = ""
+hidden = ${wifi_hidden:-"false"}
+country = "${wifi_country:-"BR"}"
 [locale]
-# keymap is not working as needed
-# keymap="us"
+# keymap is not working as expected
+# keymap = "${keymap:-us}"
 timezone = "${timezone}"
 EOF
 
