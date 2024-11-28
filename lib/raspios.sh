@@ -47,6 +47,13 @@ EOF
     # enable ssh
     log_debug "Creating: ${bootpart}/ssh"
     touch "${bootpart}/ssh"
+
+    # add ssh-key to root user
+    mkdir -p "${ospart}/root/.ssh"
+    cat "${ssh_key}" > "${ospart}/root/.ssh/authorized_keys"
+    chown -R 0:0 "${ospart}/root/.ssh"
+    chmod 0600 "${ospart}/root/.ssh/authorized_keys"
+
     # Add user
     if ! is_null "${USERNAME}"
     then
