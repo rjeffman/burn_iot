@@ -271,8 +271,9 @@ log_info "Downloading image: ${distro} version ${version} for ${target}"
 
 quiet mkdir -p "${SCRIPTDIR}/images"
 IMAGEFILE="${SCRIPTDIR}/images/$(basename "${url}")"
-curl -C - -L -o "${IMAGEFILE}" "${url}" \
+curl --create-file-mode 0666 -C - -L -o "${IMAGEFILE}" "${url}" \
     || die "Failed to Dowload image."
+
 
 # write image to SDCARD
 log_info "Writing image"
