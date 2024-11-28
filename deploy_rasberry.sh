@@ -7,6 +7,14 @@ TEMPLATEDIR="${SCRIPTDIR}/templates"
 export TEMPLATEDIR
 . "${LIBDIR}/shfun"
 
+trap unmount_partitions EXIT
+
+unmount_partitions() {
+    trap - EXIT
+    unmount_partition "${bootpart}"
+    unmount_partition "${ospart}"
+}
+
 prog=$(basename "$0")
 
 usage() {
@@ -28,10 +36,13 @@ is_null() {
 }
 
 unmount_partition() {
-    log_info "Sync data"
-    sync
-    log_info "Unmounting partition"
-    umount "${1}"
+    if grep -q " ${1} " <(mount)
+    then
+        log_info "Sync data"
+        sync
+        log_info "Unmounting partition"
+        umount "${1}"
+    fi
 }
 
 copy_template() {
@@ -90,8 +101,7 @@ pre_boot_customization() {
     fi
 
     # Clean up
-    unmount_partition "${bootpart}"
-    unmount_partition "${ospart}"
+    unmount_partitions
 
     rm -rf "${bootpart}" "${ospart}"
 }
