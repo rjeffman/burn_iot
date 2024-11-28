@@ -222,6 +222,7 @@ then
         conf_wifi_ssid="$(get_conf "ssid" <<<"${wificonf}")"
         wifi_ssid="${wifi_ssid:-${conf_wifi_ssid}}"
         wifi_password="$(get_conf "password" <<<"${wificonf}")"
+        wifi_country="$(get_conf "country" "BR" <<<"${wificonf}")"
     fi
     # User configuration
     userconf="$(get_conf "user" < "${CONFIG}")"
@@ -235,7 +236,7 @@ then
     update_config <<<$(get_conf "target.${target}" <"${CONFIG}" 2>/dev/null)
 fi
 
-is_null "${wifi_ssid}" || export wifi_ssid wifi_password
+is_null "${wifi_ssid}" || export wifi_ssid wifi_password wifi_country
 
 # Raspbian OS has an awful download link.
 IMGRELEASE=""
@@ -257,6 +258,7 @@ if ! is_null "${wifi_ssid}"
 then
     log_debug "SSID: ${wifi_ssid}"
     log_debug "Password: ${wifi_password}"
+    log_debug "Country: ${wifi_country:-"BR"}"
     log_debug "Hidden: ${wifi_hidden:-"false"}"
 fi
 is_null "${keymap}" || log_debug "Keymap: ${keymap}"

@@ -21,12 +21,12 @@ distro:
       rpi1:
         arch: "armhf"
         version: "bookworm"
-        date: "2024-07-04"
+        date: "2024-11-19"
         release: "lite"
       rpi4:
-        arch: "aarch64"
+        arch: "arm64"
         version: "bookworm"
-        date: "2024-07-04"
+        date: "2024-11-19"
         release: "lite"
   netbsd:
     url: "http://nycdn.netbsd.org/pub/NetBSD-daily/${version}/latest/evbarm-${arch}/binary/gzimg/${release}.img.gz"
