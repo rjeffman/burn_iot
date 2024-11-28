@@ -1,0 +1,10 @@
+# KEYBOARD CONFIGURATION FILE
+
+# Consult the keyboard(5) manual page
+
+XKBMODEL="pc86"
+XKBLAYOUT="${kbdlayout}"
+XKBVARIANT="${kbdvariant}"
+XKBOPTIONS="altwin:swap_lalt_lwin"
+
+BACKSPACE="guess"
