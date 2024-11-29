@@ -1,6 +1,6 @@
 # Headless deployment of Raspberry Pi devices
 
-The `deploy_raspbery.sh` script eases the creation of SD card images using [Fedora IoT](https://fedoraproject.org/iot) and [Raspberry Pi OS](https://www.raspberrypi.com/software/) for devices like the Raspberry Pi.
+The `deploy_raspberry.sh` script eases the creation of SD card images using [Fedora IoT](https://fedoraproject.org/iot) and [Raspberry Pi OS](https://www.raspberrypi.com/software/) for devices like the Raspberry Pi.
 
 The script will download a pre-built image, write it to an SD card, and configure the hostname, the keymap, and the Ethernet and WiFi interfaces. The root password will be disabled and a SSH key will be added to provide SSH access to the device.
 
@@ -33,7 +33,11 @@ All configuration is optional. Currently, NetBSD cannot be customized.
 
 ### Keymap configuration
 
-Keymap configuration only works for Fedora. By default the keymap used is "us".
+If setting a keymap, use a localectl keymap (`localectl list-keymaps`). For example, `us-dvorak-alt-intl`.
+
+In the case of Raspberry Pi OS, the string before the first dash ('-'), `us` in the example, will be used as keyboard layout, and the rest of the keymap name (`dvorak-alt-intl`) as keyboard variant.
+
+By default the keymap used is "us".
 
 
 ### Access configuration
@@ -42,9 +46,9 @@ There are two ways to configure access to the device, by adding a user with `sud
 
 Adding a user requires a username and a password, in clear text. By default, the user is `pi` and the password is `raspberry`. This is only used for Raspberry Pi OS.
 
-Setting up a SSH key for root access only works with Fedora. If you don't set the ssh key, you'll not be able to access the device.
+Provide the public key from an SSH key pair to setup key based SSH access. The key is set for the root user and for the first user (on Raspberry Pi OS).
 
-To genetare the SSH key, you can use: 
+To generate the SSH key pair, you can use: 
 
 ```bash
 ssh-keygen -te ed25519 -a 100 -f ssh_keys/mysshkey -N "MyPassphrase"
@@ -73,13 +77,14 @@ target:
     arm_freq: 800
 ```
 
+> Note: this is only relevant for targets which provide a configuration template.
 
 ## Writing the image
 
 To write the SD Card use:
 
 ```
-sudo ./deploy_raspberry.sh <system> <target> <device>
+sudo ./deploy_raspberry.sh [options] <system> <target> <device> [configuration]
 ```
 
 Currently available systems and targets:
@@ -99,7 +104,7 @@ Currently available systems and targets:
 
 Superuser privileges are usually needed to write to the SD card device.
 
-Optionally, the hostname and domain can be set though argumenst. Use `-n <hostname>[.<domain>]` (domain is optional).
+Optionally, the hostname and domain can be set though command line arguments. Use `-n <hostname>[.<domain>]` (domain is optional).
 
 It is also possible to set the framebuffer rotation with the `-r` option where the rotation is defined as:
 * 0 = no rotation
@@ -107,17 +112,18 @@ It is also possible to set the framebuffer rotation with the `-r` option where t
 * 2 = rotate 180 degrees
 * 3 = rotate left
 
+To define a specific WiFi SSID for a single board you can use the `-s <SSID>` option.
 
 ## Speeding things up
 
-Downloading the image and writing to the card is what really consumes time here, if you have more than a single card to prepare, the image downloaded is kept in a chache directory speeding things up. As the changes are applied directly to the SD card, the original image is kept as downloaded.
+Downloading the image and writing to the card is what really consumes time here, if you have more than a single card to prepare, the image downloaded is kept in a cache directory speeding things up. As the changes are applied directly to the SD card, the original image is kept as downloaded.
 
 Choose your SD cards wisely, some are really slow to write to (as in ~5MB/s rate or less), and may take up to 15 minutes to prepare.
 
 
 ## Dependencies
 
-You'll need [shyaml](https://github.com/0k/shyaml), `envsubst` (which usually is part of `gettext-envsubst` package) and `dd`(which is usually avaiable, as is part of `coreutils`). Als for each system to be deployed you'll need:
+You'll need [shyaml](https://github.com/0k/shyaml), `envsubst` (which usually is part of `gettext-envsubst` package) and `dd`(which is usually available, as is part of `coreutils`). Also for each system to be deployed you'll need:
 * fedora: [arm-image-installer](https://pagure.io/arm-image-installer), `uuid`
 * raspios: [xzcat](https://github.com/tukaani-project/xz)
 * netbsd: [zcat](https://www.gnu.org/software/gzip)
@@ -129,7 +135,7 @@ Upon first boot a lot of stuff will happen on your Raspberry Pi and you should g
 
 ## License
 
-This script is distributed under the very permissive BSD Zero Clause Licene. See [LICENSE](LICENSE).
+This script is distributed under the very permissive BSD Zero Clause License. See [LICENSE](LICENSE).
 
 Use at your own (very low) risk.
 
