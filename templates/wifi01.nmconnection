@@ -5,6 +5,8 @@ autoconnect=true
 uuid=${uuid}
 
 [wifi]
+cloned-mac-address=permanent
+mac-address-randomization=1
 mode=infrastructure
 ssid=${wifi_ssid}
 
