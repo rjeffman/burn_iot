@@ -60,4 +60,6 @@ custom_config() {
     dest="${deployroot}/${system_connections}/eth01.nmconnection"
     export uuid="$(uuid)"
     copy_template "${TEMPLATEDIR}/eth01.nmconnection" "${dest}" "0600"
+    # force selinux to relabel file system
+    touch "${deployroot}/.autorelabel"
 }
