@@ -37,9 +37,6 @@ custom_config() {
     ospart="${2}"
     shift 2
     deployroot="$(get_deployroot "${ospart}")"
-    # Enable SSH
-    log_info "Enable SSH"
-    touch "${bootpart}/ssh"
     # Set hostname
     log_info "Configuring hostname to '$hostname'"
     echo "${hostname}" > "${deployroot}/etc/hostname"
