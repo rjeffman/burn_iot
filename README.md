@@ -9,6 +9,8 @@ The script will download a pre-built image, write it to an SD card, and configur
 The configuration is done through a YAML file:
 
 ```yaml
+distro: "fedora"
+device: "/dev/sda"
 hostname: "myhost"
 domain: "mydomain.local"
 timezone: "Etc/UTC"
@@ -84,23 +86,22 @@ target:
 To write the SD Card use:
 
 ```
-sudo ./deploy_raspberry.sh [options] <system> <target> <device> [configuration]
+sudo ./deploy_raspberry.sh [options] <target> <configuration>
 ```
 
 Currently available systems and targets:
-* Fedora IoT (_fedora_)
+* Fedora IoT (distro: _fedora_)
     * rpi4
     * rpi02w
-* Raspberry Pi OS (_raspios_):
+* Raspberry Pi OS (distro: _raspios_):
     * rpi1
     * rpi4 (untested)
     * rpi0w
     * rpi02w
-* NetBSD (_netbsd_):
+* NetBSD (distro: _netbsd_):
     * rpi1 (NetBSD 9.x)
     * rpi4 (NetBSD 10.x - untested)
     * `Note`: only partial support is provided for `netbsd`. To finish the installation you'll still need a monitor and a keyboard attached to the Raspberry Pi device to setup the `root` password and, at least, install a Python version (e.g. `# pkg_add python3.11`) if you plan to use [Ansible](https://ansible.com) to automate the configuration.
-
 
 Superuser privileges are usually needed to write to the SD card device.
 

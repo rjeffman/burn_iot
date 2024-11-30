@@ -18,7 +18,7 @@ unmount_partitions() {
 prog=$(basename "$0")
 
 usage() {
-    echo "usage: ${prog} [-h] [-r ROTATE] [-n HOSTNAME] [-s SSID] DISTRO TARGET SD_DEVICE [CONFIG]"
+    echo "usage: ${prog} [-h] [-r ROTATE] [-n HOSTNAME] [-s SSID] [-d DEVICE] [-o DISTRO]  TARGET CONFIG"
 }
 
 get_conf()
@@ -81,7 +81,7 @@ pre_boot_customization() {
     then
         log_debug "Adding configuration for [all] in config.txt"
         append_template "${TEMPLATEDIR}/all.txt" "${config_path}" \
-            || die "Could not modify 'config.txt'."
+            d|| die "Could not modify 'config.txt'."
     fi
 
     # Update config.txt with target changes
@@ -113,8 +113,11 @@ update_config() {
     then
         for key in $(shyaml keys <<<"${newconfig}")
         do
-            value="$(shyaml get-value "${key}" <<<"${newconfig}")"
-            export ${key}="${value}"
+            if is_null "${!key}"
+            then
+                value="$(shyaml get-value "${key}" <<<"${newconfig}")"
+                export ${key}="${value}"
+            fi
         done
     fi
 }
@@ -126,14 +129,16 @@ rotate=""
 hostname=""
 domain=""
 
-while getopts ":hn:r:s:" opt "${@}"
+while getopts ":hd:n:o:r:s:" opt "${@}"
 do
     case "${opt}" in
         h) usage && exit 0 ;;
+        d) SD_DEVICE="${OPTARG}" ;;
         n)
             hostname="$(cut -d. -f1 <<<"${OPTARG}")"
             [ "${hostname}" != "${OPTARG}" ] && domain="$(cut -d. -f2- <<<"${OPTARG}")"
         ;;
+        o) distro="${OPTARG}" ;;
         r) rotate="fbcon=rotate:${OPTARG}" ;;
         s) wifi_ssid="${OPTARG}" ;;
         *) die -u "Invalid option: ${OPTARG}"
@@ -143,25 +148,15 @@ done
 shift $((OPTIND - 1))
 
 # validate input
-[ $# -lt 3 ] && die -u "Missing mandatory options."
+[ $# -lt 2 ] && die -u "Missing mandatory options."
+[ $# -ne 2 ] && die -u "Only TARGET and CONFIG must be provided."
 
 #
 # Positional arguments
 #
-distro="${1}"
-target="${2}"
-SD_DEVICE="$(readlink -f "${3}")"
-shift 3
-[ -n "${1}" ] && CONFIG="$(realpath "${1}")" && shift
-
-test -f "${LIBDIR}/${distro}.sh" || die "Invalid distro: ${distro}"
-test -b "${SD_DEVICE}" || die "Invalid block device: ${SD_DEVICE}"
-
-log_debug "Distro: ${distro}"
-log_debug "Target: ${target}"
-log_debug "Media device: ${SD_DEVICE}"
-
-export distro target SD_DEVICE
+target="${1}"
+CONFIG="$(realpath "${2}")"
+shift 2
 
 #
 # Check script dependencies
@@ -170,9 +165,50 @@ log_info "Checking dependencies"
 check_deps envsubst tr mount openssl shyaml
 check_deps "${distro_deps[@]:-""}"
 
-# load distro specific scripts
-log_info "Loading ${distro} scripts"
-. "${LIBDIR}/${distro}.sh"
+#
+# Defaults
+#
+USERNAME="pi"
+USERPASS="raspberry"
+
+#
+# User configuration
+#
+echo "Confifguration file: ${CONFIG}"
+
+if [ -f "${CONFIG}" ]
+then
+    configdata="$(cat "${CONFIG}")"
+    # instalation parameters
+    is_null "${distro}" && distro="$(get_conf "distro" <<< "${configdata}" 2>/dev/null)"
+    is_null "${SD_DEVICE}" && SD_DEVICE="$(get_conf "device" <<< "${configdata}" 2>/dev/null)"
+
+    ssh_key="$(get_conf "ssh-key" <<< "${configdata}")"
+    is_null "${hostname}" && hostname="$(get_conf "hostname" "raspberry" <<< "${configdata}")"
+    domain="$(get_conf "domain" <<< "${configdata}")"
+    is_null "${domain}" && hostname="${hostname}.${domain}"
+    # Locale configuration
+    keymap="$(get_conf "keymap" <<< "${configdata}")"
+    timezone="$(get_conf "timezone" "Etc/UTC" <<< "${configdata}")"
+    # WiFi configuration
+    wificonf="$(get_conf "network.wifi" <<< "${configdata}")"
+    if ! is_null "${wificonf}"
+    then
+        is_null "${wifi_ssid}" && wifi_ssid="$(get_conf "ssid" <<<"${wificonf}")"
+        wifi_password="$(get_conf "password" <<<"${wificonf}")"
+        wifi_country="$(get_conf "country" "BR" <<<"${wificonf}")"
+    fi
+    # User configuration
+    userconf="$(get_conf "user" <<< "${configdata}")"
+    if ! is_null "${userconf}"
+    then
+        USERNAME="$(get_conf "username" <<<"${userconf}")"
+        USERPASS="$(get_conf "password" <<<"${userconf}")"
+        export USERNAME USERPASS
+    fi
+    # Set current configuration
+    update_config <<<$(get_conf "target.${target}" <"${CONFIG}" 2>/dev/null)
+fi
 
 #
 # Global configuration
@@ -182,6 +218,18 @@ log_info "Parsing global configuration"
 configdata="$(get_conf "config" < "${CONFDIR}/distros.yaml")"
 is_null "${configdata}" \
   || update_config <<<"$(get_conf "target.${target}" <<< "${configdata}" 2>/dev/null)"
+
+# check parameters
+is_null "${distro}" && die -u "Distro not defined."
+is_null "${SD_DEVICE}" && die -u "SD device not defined."
+test -f "${LIBDIR}/${distro}.sh" || die "Invalid distro: ${distro}"
+test -b "${SD_DEVICE}" || die "Invalid block device: ${SD_DEVICE}"
+
+export distro target SD_DEVICE
+
+# load distro specific scripts
+log_info "Loading ${distro} scripts"
+. "${LIBDIR}/${distro}.sh"
 
 #
 # Distro release
@@ -197,44 +245,6 @@ releaseconf=$(get_conf "target.${target}" <<< "${distroconf}")
 is_null "${releaseconf}" && die "${distro} has no release data for target ${target}"
 update_config <<<"${releaseconf}"
 
-#
-# Defaults
-#
-USERNAME="pi"
-USERPASS="raspberry"
-
-#
-# User configuration
-#
-if [ -f "${CONFIG}" ]
-then
-    ssh_key="$(get_conf "ssh-key" < "${CONFIG}")"
-    is_null "${hostname}" && hostname="$(get_conf "hostname" "raspberry" < "${CONFIG}")"
-    is_null "${domain}" && domain="$(get_conf "domain" < "${CONFIG}")"
-    is_null "${domain}" || hostname="${hostname}.${domain}"
-    # Locale configuration
-    keymap="$(get_conf "keymap" < "${CONFIG}")"
-    timezone="$(get_conf "timezone" "Etc/UTC" < "${CONFIG}")"
-    # WiFi configuration
-    wificonf="$(get_conf "network.wifi" < "${CONFIG}")"
-    if ! is_null "${wificonf}"
-    then
-        conf_wifi_ssid="$(get_conf "ssid" <<<"${wificonf}")"
-        wifi_ssid="${wifi_ssid:-${conf_wifi_ssid}}"
-        wifi_password="$(get_conf "password" <<<"${wificonf}")"
-        wifi_country="$(get_conf "country" "BR" <<<"${wificonf}")"
-    fi
-    # User configuration
-    userconf="$(get_conf "user" < "${CONFIG}")"
-    if ! is_null "${userconf}"
-    then
-        USERNAME="$(get_conf "username" <<<"${userconf}")"
-        USERPASS="$(get_conf "password" <<<"${userconf}")"
-        export USERNAME USERPASS
-    fi
-    # Override target configuration
-    update_config <<<$(get_conf "target.${target}" <"${CONFIG}" 2>/dev/null)
-fi
 
 is_null "${wifi_ssid}" || export wifi_ssid wifi_password wifi_country
 
@@ -249,6 +259,11 @@ fi
 export IMGRELEASE
 
 log_info "Configuration:"
+
+log_info "Distro: ${distro}"
+log_info "Target: ${target}"
+log_info "Media device: ${SD_DEVICE}"
+
 log_info "Release: $arch $version $date $release"
 is_null "${hostname}" || log_debug "Hostname: ${hostname}"
 is_null "${USERNAME}" || log_debug "Username: ${USERNAME}"
@@ -256,10 +271,10 @@ is_null "${USERPASS}" || log_debug "Password: ${USERPASS}"
 is_null "${ssh_key}" || log_debug "SSH Key file: ${ssh_key}"
 if ! is_null "${wifi_ssid}"
 then
-    log_debug "SSID: ${wifi_ssid}"
-    log_debug "Password: ${wifi_password}"
-    log_debug "Country: ${wifi_country:-"BR"}"
-    log_debug "Hidden: ${wifi_hidden:-"false"}"
+    log_info "SSID: ${wifi_ssid}"
+    log_info "Password: ${wifi_password}"
+    log_info "Country: ${wifi_country:-"BR"}"
+    log_info "Hidden: ${wifi_hidden:-"false"}"
 fi
 is_null "${keymap}" || log_debug "Keymap: ${keymap}"
 is_null "${timezone}" || log_debug "Timezone: ${timezone}"
@@ -269,7 +284,7 @@ url="$(envsubst <<<"${url}")"
 log_debug "Download link: ${url}"
 log_info "Downloading image: ${distro} version ${version} for ${target}"
 
-quiet mkdir -p "${SCRIPTDIR}/images"
+quiet mkdir -m 0777 -p "${SCRIPTDIR}/images"
 IMAGEFILE="${SCRIPTDIR}/images/$(basename "${url}")"
 curl --create-file-mode 0666 -C - -L -o "${IMAGEFILE}" "${url}" \
     || die "Failed to Dowload image."
