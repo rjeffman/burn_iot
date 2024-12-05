@@ -54,3 +54,14 @@ distro:
         arch: "aarch64"
         version: "netbsd-10"
         release: "arm64"
+  freebsd:
+    url: "https://download.freebsd.org/releases/ISO-IMAGES/${version}/FreeBSD-${version}-RELEASE-${release}-${arch}-RPI.img.xz"
+    target:
+      # pi0w:
+      #  arch: "armv7"
+      #  version: "14.2"
+      #  release: "arm"
+      rpi4:
+        arch: "aarch64"
+        version: "14.2"
+        release: "arm64"
