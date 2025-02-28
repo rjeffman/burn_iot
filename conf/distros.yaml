@@ -17,9 +17,11 @@ distro:
         version: "41"
         date: "20241027"
         release: "0"
-        # version: "40"
-        # date: "20240422"
-        # release: "3"
+      # rpiN:
+        # arch: "aarch64"
+        # version: "41"
+        # date: "20241027"
+        # release: "0"
   raspios:
     url: "https://downloads.raspberrypi.com/raspios_${release}${arch}/images/raspios_${release}${arch}-${date}/${date}-raspios-${version}-${arch}${IMGRELEASE}.img.xz"
     target:
@@ -39,6 +41,11 @@ distro:
         date: "2024-11-19"
         release: "lite"
       rpi4:
+        arch: "arm64"
+        version: "bookworm"
+        date: "2024-11-19"
+        release: "lite"
+      rpi5:
         arch: "arm64"
         version: "bookworm"
         date: "2024-11-19"
